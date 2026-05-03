@@ -80,7 +80,7 @@ sales-pipeline/
 ├── consumer/
 │   ├── Dockerfile
 │   └── consumer.py             # Consumidor Kafka → PostgreSQL
-│
+│   |__ requirements.txt
 ├── dbt_project/
 │   ├── dbt_project.yml
 │   ├── profiles.yml
