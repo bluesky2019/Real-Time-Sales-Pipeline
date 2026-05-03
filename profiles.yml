@@ -1,0 +1,12 @@
+dbt_project:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: localhost
+      port: 5433
+      dbname: vendas_dw
+      user: admin
+      password: admin123
+      schema: public
+      threads: 4
