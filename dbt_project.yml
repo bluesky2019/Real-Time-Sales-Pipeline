@@ -1,0 +1,56 @@
+name: 'sales_pipeline'
+version: '1.0.0'
+config-version: 2
+
+# Perfil de conexão definido no profiles.yml
+profile: 'sales_pipeline'
+
+# Caminhos do projeto
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+# Diretório onde o dbt grava os artefatos compilados e resultados
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+# ── Configuração dos modelos por camada ───────────────────────────────────────
+models:
+  sales_pipeline:
+
+    # Camada Bronze — espelho dos dados brutos vindos do Kafka
+    # Materializada como view: sempre reflete o estado atual da tabela de ingestão
+    bronze:
+      +materialized: view
+      +schema: bronze
+      +tags: ["bronze", "raw"]
+
+    # Camada Silver — dados limpos, tipados e enriquecidos
+    # Materializada como incremental: processa apenas registros novos
+    silver:
+      +materialized: incremental
+      +schema: silver
+      +tags: ["silver", "cleaned"]
+      +on_schema_change: "sync_all_columns"
+
+    # Camada Gold — métricas e agregações prontas para consumo pela IA
+    # Materializada como table: reconstruída completamente a cada execução
+    gold:
+      +materialized: table
+      +schema: gold
+      +tags: ["gold", "metrics"]
+
+# ── Seeds (dados de referência estáticos em CSV) ──────────────────────────────
+seeds:
+  sales_pipeline:
+    +schema: seeds
+
+# ── Snapshots (histórico de mudanças em tabelas) ──────────────────────────────
+snapshots:
+  sales_pipeline:
+    +target_schema: snapshots
