@@ -266,6 +266,5 @@ Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para ma
 
 ---
 
-<p align="center">
-  Feito com dedicação por quem acredita que dados bem tratados transformam decisões. 🔥
+<p align="center">Feito com dedicação por quem acredita que dados bem tratados transformam decisões. Gilnei Azambuja Borges - Profissional sempre aprendendo mais🔥
 </p>
