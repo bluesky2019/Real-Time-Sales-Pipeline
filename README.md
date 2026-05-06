@@ -249,6 +249,9 @@ Este projeto é uma extensão prática da minha formação em **Banco de Dados p
 | Streamlit | Prototipação rápida de interfaces analíticas |
 
 ---
+<img width="801" height="618" alt="Front-end do sistema feito em streamlit" src="https://github.com/user-attachments/assets/4ee307e7-5c61-4057-9da2-44c725c19ea7" />
+
+---
 
 ## 📚 Referências
 
