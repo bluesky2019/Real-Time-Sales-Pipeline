@@ -223,6 +223,10 @@ O pipeline aqui construído aplica e aprofunda esses conhecimentos em um cenári
 O objetivo é demonstrar que engenharia de dados moderna não se resume a mover arquivos — é sobre construir sistemas confiáveis, rastreáveis e inteligentes que geram valor de negócio em tempo real.
 
 ---
+<img width="801" height="618" alt="Front-end do sistema feito em streamlit" src="https://github.com/user-attachments/assets/4ee307e7-5c61-4057-9da2-44c725c19ea7" />
+
+
+---
 
 ## 📚 Referências e Aprendizado
 
