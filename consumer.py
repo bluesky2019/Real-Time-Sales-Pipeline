@@ -1,11 +1,17 @@
 from confluent_kafka import Consumer
+from datetime import datetime
 import psycopg2
 import json
+import base64
+import struct
 
-# Conexão com PostgreSQL de destino
+# Conexao com PostgreSQL de destino
 conn = psycopg2.connect(
-    host="localhost", port=5433,
-    dbname="vendas_dw", user="admin", password="admin123"
+    host="localhost",
+    port=5433,
+    dbname="vendas_dw",
+    user="admin",
+    password="admin123"
 )
 cursor = conn.cursor()
 
@@ -23,31 +29,71 @@ cursor.execute("""
 """)
 conn.commit()
 
-# Configuração do consumidor Kafka
+# Configuracao do consumidor Kafka
 consumer = Consumer({
-    'bootstrap.servers': 'localhost:9092',
-    'group.id': 'pipeline-vendas',
-    'auto.offset.reset': 'earliest'
+    "bootstrap.servers": "localhost:29092",
+    "group.id": "pipeline-vendas",
+    "auto.offset.reset": "earliest"
 })
-consumer.subscribe(['vendas.public.vendas'])
+consumer.subscribe(["vendas.public.vendas"])
 
-print("🚀 Consumidor rodando... aguardando eventos de vendas")
+print("Consumidor rodando...")
+
+
+def decodificar_valor(valor):
+    """Debezium envia NUMERIC como base64 - converte para decimal"""
+    if isinstance(valor, str):
+        try:
+            decoded = base64.b64decode(valor)
+            if len(decoded) == 2:
+                return struct.unpack(">h", decoded)[0] / 100
+            elif len(decoded) == 4:
+                return struct.unpack(">i", decoded)[0] / 100
+            elif len(decoded) == 8:
+                return struct.unpack(">q", decoded)[0] / 100
+        except Exception:
+            return valor
+    return valor
+
+
+def decodificar_timestamp(ts):
+    """Debezium envia TIMESTAMP como microsegundos Unix - converte para datetime"""
+    if ts is not None:
+        try:
+            return datetime.utcfromtimestamp(ts / 1000000)
+        except Exception:
+            return None
+    return None
+
 
 while True:
     msg = consumer.poll(1.0)
     if msg is None:
         continue
-    
-    payload = json.loads(msg.value())
-    after = payload.get('payload', {}).get('after')  # dados APÓS a operação
-    
-    if after:
-        cursor.execute("""
-            INSERT INTO bronze_vendas (cliente_id, produto_id, valor, quantidade, data_venda)
-            VALUES (%(cliente_id)s, %(produto_id)s, %(valor)s, %(quantidade)s, %(data_venda)s)
-            ON CONFLICT (venda_id) DO UPDATE SET
-                valor = EXCLUDED.valor,
-                quantidade = EXCLUDED.quantidade
-        """, after)
-        conn.commit()
-        print(f"✅ Venda inserida: {after}")
+
+    if msg.error():
+        print("Erro Kafka:", msg.error())
+        continue
+
+    try:
+        payload = json.loads(msg.value())
+        after = payload.get("payload", {}).get("after")
+
+        if after:
+            after["valor"] = decodificar_valor(after.get("valor"))
+            after["data_venda"] = decodificar_timestamp(after.get("data_venda"))
+
+            cursor.execute("""
+                INSERT INTO bronze_vendas (cliente_id, produto_id, valor, quantidade, data_venda)
+                VALUES (%(cliente_id)s, %(produto_id)s, %(valor)s, %(quantidade)s, %(data_venda)s)
+                ON CONFLICT (venda_id) DO UPDATE SET
+                    valor = EXCLUDED.valor,
+                    quantidade = EXCLUDED.quantidade
+            """, after)
+            conn.commit()
+            print("Venda inserida:", after)
+
+    except Exception as e:
+        conn.rollback()
+        print("Mensagem ignorada:", e)
+        continue
