@@ -1,4 +1,4 @@
-dbt_project:
+sales_pipeline:
   target: dev
   outputs:
     dev:
